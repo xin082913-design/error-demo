@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页错误监控演示</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .error-display {
+            flex: 2;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+            color: #6a11cb;
+        }
+        
+        .error-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            color: #333;
+            font-size: 1.1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #6a11cb;
+        }
+        
+        .error-btn:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .error-btn i {
+            margin-right: 10px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .error-btn.get-error {
+            border-left-color: #e74c3c;
+        }
+        
+        .error-btn.post-error {
+            border-left-color: #3498db;
+        }
+        
+        .error-btn.js-error {
+            border-left-color: #f39c12;
+        }
+        
+        .error-btn.resource-error {
+            border-left-color: #2ecc71;
+        }
+        
+        .error-btn.long-url {
+            border-left-color: #9b59b6;
+        }
+        
+        .error-log {
+            flex-grow: 1;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 500px;
+            border: 1px solid #eaeaea;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .log-entry {
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #6a11cb;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .log-entry.error {
+            border-left-color: #e74c3c;
+            background-color: #ffeaea;
+        }
+        
+        .log-entry.warning {
+            border-left-color: #f39c12;
+            background-color: #fff4e6;
+        }
+        
+        .log-entry.info {
+            border-left-color: #3498db;
+            background-color: #e8f4fc;
+        }
+        
+        .log-time {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .log-message {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .log-details {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #6a11cb;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex: 1;
+        }
+        
+        .action-btn:hover {
+            background-color: #5a0cb3;
+        }
+        
+        .action-btn.clear {
+            background-color: #95a5a6;
+        }
+        
+        .action-btn.clear:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
+        }
+        
+        .status-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .status-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #6a11cb;
+        }
+        
+        .status-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+        
+        /* 长链接样式 */
+        .long-url {
+            word-break: break-all;
+            font-size: 0.8rem;
+            color: #e74c3c;
+            margin-top: 5px;
+        }
+        
+        /* 隐藏图像占位符 */
+        .hidden-image {
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-bug"></i> 网页错误监控演示</h1>
+            <p class="subtitle">本页面演示了网页开发中常见的错误类型：GET/POST请求错误、JavaScript运行时错误、静态资源加载失败以及超长URL的处理。</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2 class="panel-title"><i class="fas fa-sliders-h"></i> 错误控制面板</h2>
+                
+                <button class="error-btn get-error" id="trigger-get-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    触发GET请求错误
+                </button>
+                
+                <button class="error-btn post-error" id="trigger-post-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    触发POST请求错误
+                </button>
+                
+                <button class="error-btn js-error" id="trigger-js-error">
+                    <i class="fas fa-code"></i>
+                    触发JavaScript错误
+                </button>
+                
+                <button class="error-btn resource-error" id="trigger-resource-error">
+                    <i class="fas fa-image"></i>
+                    触发静态资源加载错误
+                </button>
+                
+                <button class="error-btn long-url" id="trigger-long-url">
+                    <i class="fas fa-link"></i>
+                    生成超长链接
+                </button>
+                
+                <div class="actions">
+                    <button class="action-btn clear" id="clear-logs">
+                        <i class="fas fa-trash-alt"></i> 清空日志
+                    </button>
+                    <button class="action-btn" id="add-mock-error">
+                        <i class="fas fa-plus-circle"></i> 添加模拟错误
+                    </button>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-item">
+                        <div class="status-value" id="error-count">0</div>
+                        <div class="status-label">错误总数</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="warning-count">0</div>
+                        <div class="status-label">警告总数</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="info-count">0</div>
+                        <div class="status-label">信息总数</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="error-display">
+                <h2 class="panel-title"><i class="fas fa-clipboard-list"></i> 错误日志</h2>
+                
+                <div class="error-log" id="error-log">
+                    <div class="log-entry info">
+                        <div class="log-time" id="current-time">加载时间: </div>
+                        <div class="log-message">错误监控系统已启动。点击左侧按钮触发各种错误。</div>
+                        <div class="log-details">系统正在监控：GET/POST请求、JavaScript运行时错误、资源加载和URL长度。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用于演示静态资源加载错误的图像 -->
+        <div class="hidden-image">
+            <img id="non-existent-image" src="non-existent-image.jpg" alt="不存在的图片">
+        </div>
+        
+        <footer>
+            <p>网页错误监控演示 &copy; 2023 | 本页面仅用于演示目的，不会向外部服务器发送真实请求</p>
+            <p>错误类型：GET请求错误 | POST请求错误 | JavaScript错误 | 静态资源加载错误 | 超长URL处理</p>
+        </footer>
+    </div>
+
+    <script>
+        // 初始化变量
+        let errorCount = 0;
+        let warningCount = 0;
+        let infoCount = 1; // 初始有一条信息
+        
+        // DOM元素
+        const errorLog = document.getElementById('error-log');
+        const errorCountElement = document.getElementById('error-count');
+        const warningCountElement = document.getElementById('warning-count');
+        const infoCountElement = document.getElementById('info-count');
+        const currentTimeElement = document.getElementById('current-time');
+        
+        // 设置当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            currentTimeElement.textContent = `加载时间: ${now.toLocaleString()}`;
+        }
+        updateCurrentTime();
+        
+        // 添加日志条目
+        function addLogEntry(type, message, details = '') {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `
+                <div class="log-time">${timeString}</div>
+                <div class="log-message">${message}</div>
+                ${details ? `<div class="log-details">${details}</div>` : ''}
+            `;
+            
+            errorLog.prepend(logEntry);
+            
+            // 更新计数器
+            if (type === 'error') errorCount++;
+            else if (type === 'warning') warningCount++;
+            else if (type === 'info') infoCount++;
+            
+            updateCounters();
+            
+            // 自动滚动到最新日志
+            errorLog.scrollTop = 0;
+        }
+        
+        // 更新计数器显示
+        function updateCounters() {
+            errorCountElement.textContent = errorCount;
+            warningCountElement.textContent = warningCount;
+            infoCountElement.textContent = infoCount;
+        }
+        
+        // 触发GET请求错误
+        document.getElementById('trigger-get-error').addEventListener('click', function() {
+            addLogEntry('warning', '即将触发GET请求错误...', '尝试请求一个不存在的API端点');
+            
+            // 尝试向不存在的端点发送GET请求
+            fetch('https://jsonplaceholder.typicode.com/nonexistent-endpoint')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`GET请求失败: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    addLogEntry('info', 'GET请求成功', `响应数据: ${JSON.stringify(data)}`);
+                })
+                .catch(error => {
+                    addLogEntry('error', 'GET请求错误', error.message);
+                });
+        });
+        
+        // 触发POST请求错误
+        document.getElementById('trigger-post-error').addEventListener('click', function() {
+            addLogEntry('warning', '即将触发POST请求错误...', '尝试向一个不接受POST请求的端点发送数据');
+            
+            // 尝试向不接受POST请求的端点发送数据
+            fetch('https://jsonplaceholder.typicode.com/posts/1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: '测试帖子',
+                    body: '这是一个测试内容',
+                    userId: 1
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`POST请求失败: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                addLogEntry('info', 'POST请求成功', `响应数据: ${JSON.stringify(data)}`);
+            })
+            .catch(error => {
+                addLogEntry('error', 'POST请求错误', error.message);
+            });
+        });
+        
+        // 触发JavaScript错误
+        document.getElementById('trigger-js-error').addEventListener('click', function() {
+            addLogEntry('warning', '即将触发JavaScript运行时错误...', '尝试调用未定义的函数');
+            
+            // 故意触发JavaScript错误
+            try {
+                // 尝试调用未定义的函数
+                undefinedFunction();
+            } catch (error) {
+                addLogEntry('error', 'JavaScript运行时错误', error.toString());
+            }
+        });
+        
+        // 触发静态资源加载错误
+        document.getElementById('trigger-resource-error').addEventListener('click', function() {
+            addLogEntry('warning', '即将触发静态资源加载错误...', '尝试加载不存在的图片资源');
+            
+            // 创建并加载一个不存在的图片
+            const img = document.createElement('img');
+            img.src = 'non-existent-image-' + Date.now() + '.jpg';
+            img.alt = '不存在的图片';
+            
+            img.onerror = function() {
+                addLogEntry('error', '静态资源加载错误', `无法加载图片: ${img.src}`);
+            };
+            
+            img.onload = function() {
+                addLogEntry('info', '图片加载成功', `图片URL: ${img.src}`);
+            };
+            
+            // 将图片添加到隐藏区域
+            document.querySelector('.hidden-image').appendChild(img);
+        });
+        
+        // 生成超长链接
+        document.getElementById('trigger-long-url').addEventListener('click', function() {
+            addLogEntry('warning', '生成超长链接...', '创建一个超过2000字符的URL');
+            
+            // 生成长字符串作为查询参数
+            const longParam = 'a'.repeat(1500);
+            const longUrl = `https://example.com/test?data=${longParam}&timestamp=${Date.now()}`;
+            
+            // 检查URL长度
+            if (longUrl.length > 2000) {
+                addLogEntry('error', 'URL超长警告', `生成的URL长度为 ${longUrl.length} 字符，超过浏览器限制可能导致问题`);
+            } else {
+                addLogEntry('warning', '生成长链接', `URL长度: ${longUrl.length} 字符`);
+            }
+            
+            // 显示长链接
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry warning';
+            logEntry.innerHTML = `
+                <div class="log-time">${new Date().toLocaleTimeString()}</div>
+                <div class="log-message">生成超长链接示例</div>
+                <div class="log-details">
+                    <div>URL长度: ${longUrl.length} 字符</div>
+                    <div class="long-url">${longUrl.substring(0, 200)}...</div>
+                </div>
+            `;
+            
+            errorLog.prepend(logEntry);
+            warningCount++;
+            updateCounters();
+        });
+        
+        // 清空日志
+        document.getElementById('clear-logs').addEventListener('click', function() {
+            errorLog.innerHTML = '';
+            
+            // 重置计数器
+            errorCount = 0;
+            warningCount = 0;
+            infoCount = 0;
+            updateCounters();
+            
+            // 添加初始消息
+            addLogEntry('info', '日志已清空', '点击左侧按钮触发各种错误');
+        });
+        
+        // 添加模拟错误
+        document.getElementById('add-mock-error').addEventListener('click', function() {
+            const errorTypes = ['info', 'warning', 'error'];
+            const type = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+            
+            const messages = {
+                info: [
+                    '页面加载完成',
+                    '用户交互事件已触发',
+                    '资源预加载开始'
+                ],
+                warning: [
+                    'API响应时间超过预期',
+                    '内存使用量接近阈值',
+                    '网络连接不稳定'
+                ],
+                error: [
+                    '数据库连接失败',
+                    '用户认证令牌过期',
+                    '第三方服务不可用'
+                ]
+            };
+            
+            const message = messages[type][Math.floor(Math.random() * messages[type].length)];
+            const details = `模拟${type}类型日志 - 时间戳: ${Date.now()}`;
+            
+            addLogEntry(type, message, details);
+        });
+        
+        // 全局错误捕获
+        window.onerror = function(message, source, lineno, colno, error) {
+            addLogEntry('error', '全局捕获的JavaScript错误', `消息: ${message}，位置: ${source}:${lineno}:${colno}`);
+            return false; // 防止默认错误处理
+        };
+        
+        // 捕获未处理的Promise拒绝
+        window.addEventListener('unhandledrejection', function(event) {
+            addLogEntry('error', '未处理的Promise拒绝', `原因: ${event.reason}`);
+        });
+        
+        // 添加初始日志
+        setTimeout(() => {
+            addLogEntry('info', '系统初始化完成', '所有错误监控功能已激活');
+        }, 500);
+    </script>
+</body>
+</html>
